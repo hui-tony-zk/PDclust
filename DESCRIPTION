@@ -1,0 +1,11 @@
+Package: pairwiseMethyl
+Type: Package
+Title: Pairwise Comparisons For Single-cell DNA Methylation Data (Title Case)
+Version: 0.1.0
+Author: Tony Hui
+Maintainer: Tony Hui <hui.tony.zk@gmail.com>
+Description: Helper functions to do pairwise comparisons of commonly covered CpG sites in single-cell DNA Methylation data
+    See publication () for more details
+License: What license is it under?
+Encoding: UTF-8
+LazyData: true
