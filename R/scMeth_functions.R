@@ -126,7 +126,7 @@ get_diff_df <- function(df) {
   return(diff.temp)
 }
 
-#' Convert pairwise dissimilarity data.frame to a pairwise matrix
+#' Convert pairwise dissimilarity data.frame to a dissimilarity matrix
 #'
 #' @param master_diff The data.frame containing pairwise dissimilarites. Typically the output of \code{create_pairwise_master}. Required.
 #' @param measure The name of the column to use as the values for the pairwise dissimilarity matrix. Defaults to the pairwise_dissimilarity. Can be changed if user wants another measure (e.g. correlation, etc).
@@ -137,7 +137,7 @@ get_diff_df <- function(df) {
 #' @export
 #' @import dplyr
 #'
-convert_to_distance_matrix <- function(master_diff, measure = "pairwise_dissimilarity", diag = NA, sample_subset = NULL) {
+convert_to_dissimilarity_matrix <- function(master_diff, measure = "pairwise_dissimilarity", diag = NA, sample_subset = NULL) {
   if (! is.null(sample_subset)) {
     master_diff <- master_diff %>% filter(x %in% sample_subset, y %in% sample_subset)
   }
@@ -151,6 +151,20 @@ convert_to_distance_matrix <- function(master_diff, measure = "pairwise_dissimil
   x <- data.matrix(tidyr::spread(test, key = y, value = value)[,-1])
   rownames(x) <- colnames(x)
   return(x)
+}
+
+#' Clustering dissimilarities
+#'
+#' @param distance_matrix A dissimilarity matrix (required)
+#'
+#' @return an list containing: 1) an hclust object and 2) cluster assignments of samples
+#' @export
+#' @import stats dplyr
+#'
+cluster_distances <- function(dissimilarity_matrix, num_clusters) {
+  hclust_obj <- hclust(dist(dissimilarity_matrix, method = "euclidean"), method = "ward.d2")
+  cluster_assignments <- cutree(hclust_obj, k = num_clusters) %>% as.data.frame() %>% setNames("cluster")
+  return(list(hclust_obj, cluster_assignments))
 }
 
 #' Create in silico merged bulk profiles from single-cell files
