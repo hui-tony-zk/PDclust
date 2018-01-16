@@ -2,7 +2,7 @@
 % Please edit documentation in R/scMeth_functions.R
 \name{get_diff_df}
 \alias{get_diff_df}
-\title{Get manhattan distance from pairwise common data frame}
+\title{Get Dissimilarity from a pairwise common data frame}
 \usage{
 get_diff_df(df)
 }
@@ -13,7 +13,7 @@ get_diff_df(df)
 A 1-row dataframe containing the pairwise dissimilarity
 }
 \description{
-Get manhattan distance from pairwise common data frame
+Get Dissimilarity from a pairwise common data frame
 }
 \details{
 Typically this function is not used by the user. It is called by \code{create_pairwise_master} when \code{calc_diff} is TRUE.

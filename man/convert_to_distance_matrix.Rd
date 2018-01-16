@@ -8,7 +8,7 @@ convert_to_distance_matrix(master_diff, measure = "manhattan_dist_scaled",
   diag = NA, sample_subset = NULL)
 }
 \arguments{
-\item{master_diff}{The data.frame containing pairwise dissimilarites. Typically the output of \code{create_pairwise_master}. See details for format of this data.frame. Required.}
+\item{master_diff}{The data.frame containing pairwise dissimilarites. Typically the output of \code{create_pairwise_master}. Required.}
 
 \item{measure}{The name of the column to use as the values for the pairwise dissimilarity matrix. Defaults to the manhanttan distance. Can be changed if user wants another measure (e.g. correlation, etc).}
 
