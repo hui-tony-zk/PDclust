@@ -9,7 +9,7 @@ visualize_clusters(dissimilarity_matrix, cluster_results = NA)
 \arguments{
 \item{dissimilarity_matrix}{A matrix outputted by `convert_to_dissimilarity_matrix()`}
 
-\item{cluster_results}{The result from `cluster_distances()`. If left empty, no clustering results will be visualized.}
+\item{cluster_results}{The result from `cluster_dissimilarity()`. If left empty, no clustering results will be visualized.}
 }
 \value{
 A ggplot-ready data.frame
