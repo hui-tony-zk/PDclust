@@ -14,9 +14,11 @@ Warning: this package requires the `tidyverse` suite of packages to work. I reco
 Step 1: Read in files
 ---------------------
 
-The input is a named list of data frames containing CpG calls for each single-cell. The four columns should be named as follows: `chr`, `start`, `end`, `meth` (for percent methylation).
+The input to the `PDclust` workflow is a named list of data frames containing CpG calls for each single-cell.
 
-There is a sample dataset included with this package that contains three single-cells and containing only chr22 to reduce file size.
+The four columns should be named as follows: `chr`, `start`, `end`, `meth` (for percent methylation).
+
+As an example, there is a sample dataset included with this package (`cpg_files`) that contains three single-cells.
 
 ``` r
 cpg_files
@@ -72,7 +74,7 @@ cpg_files
 Step 2: calculate pairwise dissimilarity with `create_pairwise_master()`
 ------------------------------------------------------------------------
 
-The second step is to do pairwise calculations. This results in a data.frame with the results
+The second step is to do pairwise calculations. This results in a data.frame with the results.
 
 ``` r
 cpg_files_pairwise <- create_pairwise_master(cpg_files)
@@ -87,7 +89,9 @@ cpg_files_pairwise
 #> #   pairwise_dissimilarity <dbl>
 ```
 
-You can also parallelize this function over many cores, in cases with many samples. Keep in mind that there are ${n 2} $ calculations, where `n` is the number of single-cells.
+You can also parallelize this function over many cores in case you have many samples. Keep in mind that there are `nC2` calculations to make, where `n` is the number of single-cells. Thus, for many samples, it might take a long time.
+
+For reference, 100 single-cells takes about 30 minutes.
 
 ``` r
 create_pairwise_master(cpg_files, cores_to_use = 2)
@@ -101,7 +105,7 @@ create_pairwise_master(cpg_files, cores_to_use = 2)
 #> #   pairwise_dissimilarity <dbl>
 ```
 
-You can include non-binary methylation calls (they're excluded by default as single-cells should be binary biologically)
+You can include non-binary methylation calls in your distance calculation in cases where you aren't working with single-cells, or have reason to believe that a CpG site might not be binary (in cases such as copy number variants).
 
 ``` r
 create_pairwise_master(cpg_files, digital = FALSE)
@@ -115,7 +119,7 @@ create_pairwise_master(cpg_files, digital = FALSE)
 #> #   pairwise_dissimilarity <dbl>
 ```
 
-If you want to use your own metric, you can use this function to generate the pairwise joins
+If you want to use your own metric instead of dissimilarity, you can set `calcdiff = FALSE` to generate the list of pairwise joins
 
 ``` r
 create_pairwise_master(cpg_files, calcdiff = FALSE)
@@ -168,8 +172,8 @@ create_pairwise_master(cpg_files, calcdiff = FALSE)
 #> # ... with 3,488 more rows
 ```
 
-Step 3: Convert to a symmetrical data frame using `convert_to_dissimilarity_matrix()`
--------------------------------------------------------------------------------------
+Step 3: Convert the data.frame to a symmetrical matrix using `convert_to_dissimilarity_matrix()`
+------------------------------------------------------------------------------------------------
 
 This turns the data.frame into a clustering-ready matrix
 
