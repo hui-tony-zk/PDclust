@@ -4,13 +4,15 @@
 \alias{cluster_distances}
 \title{Clustering dissimilarities}
 \usage{
-cluster_distances(dissimilarity_matrix)
+cluster_distances(dissimilarity_matrix, num_clusters)
 }
 \arguments{
-\item{distance_matrix}{A dissimilarity matrix (required)}
+\item{dissimilarity_matrix}{A matrix outputted by `convert_to_dissimilarity_matrix()`}
+
+\item{num_clusters}{Number of clusters to divide into}
 }
 \value{
-an hclust object
+an list containing: 1) an hclust object and 2) cluster assignments of samples
 }
 \description{
 Clustering dissimilarities

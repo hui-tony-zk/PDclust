@@ -49,7 +49,8 @@ divide_cores <- function(total, ncores = cores_to_use) {
 #'
 #' @return A list of dataframes if \code{calcdiff} is FALSE. Otherwise, a dataframe containing the pairwise dissimiarlties if \code{calcdiff} is TRUE.
 #' @export
-#' @import stats foreach doMC dplyr
+#' @import foreach doMC dplyr
+#' @importFrom stats setNames
 #'
 #' @details
 #' Each dataframe containing CpG calls must have the following four columns:
@@ -63,11 +64,11 @@ divide_cores <- function(total, ncores = cores_to_use) {
 #'     calcdiff = TRUE)
 #' }
 #'
-create_pairwise_master <- function(cpg, digital = TRUE, ncores = 2, calcdiff = TRUE){
-  doMC::registerDoMC(ncores)
+create_pairwise_master <- function(cpg, digital = TRUE, cores_to_use = 2, calcdiff = TRUE){
+  doMC::registerDoMC(cores_to_use)
   # Generate combinations
   comb.names <- utils::combn(names(cpg),2)
-  total_batch <- divide_cores(ncol(comb.names), ncores)
+  total_batch <- divide_cores(ncol(comb.names), cores_to_use)
   # Combine
   pairwise <- foreach(i=1:nrow(total_batch), .combine = c) %dopar% {
     start <- total_batch[i,1]
@@ -79,10 +80,10 @@ create_pairwise_master <- function(cpg, digital = TRUE, ncores = 2, calcdiff = T
       one <- cpg[[name1]] %>% select(1,2,4)
       two <- cpg[[name2]] %>% select(1,2,4)
       if (digital) {
-        one <- filter(one, V4 == 0 | V4 == 100)
-        two <- filter(two, V4 == 0 | V4 == 100)
+        one <- filter(one, meth == 0 | meth == 100)
+        two <- filter(two, meth == 0 | meth == 100)
       }
-      merge_temp <- inner_join(one, two, by=c("V1", "V2")) %>% setnames(c("chr","pos",paste0(name1), paste0(name2)))
+      merge_temp <- inner_join(one, two, by=c("chr", "start")) %>% setNames(c("chr","pos",paste0(name1), paste0(name2)))
       if (calcdiff) {
         merge_temp <- get_diff_df(merge_temp)
       }
@@ -93,8 +94,10 @@ create_pairwise_master <- function(cpg, digital = TRUE, ncores = 2, calcdiff = T
   }
   if (calcdiff) {
     pairwise <- suppressWarnings(bind_rows(pairwise))
+    return(tbl_df(pairwise))
+  } else {
+    return(pairwise)
   }
-  return(pairwise)
 }
 
 #' Get Dissimilarity from a pairwise common data frame
@@ -102,7 +105,8 @@ create_pairwise_master <- function(cpg, digital = TRUE, ncores = 2, calcdiff = T
 #' @param df A dataframe containing the pairwise common CpGs. Required.
 #'
 #' @return A 1-row dataframe containing the pairwise dissimilarity
-#' @import stats dplyr
+#' @import dplyr
+#' @importFrom stats setNames
 #'
 #' @details
 #' Typically this function is not used by the user. It is called by \code{create_pairwise_master} when \code{calc_diff} is TRUE.
@@ -155,16 +159,40 @@ convert_to_dissimilarity_matrix <- function(master_diff, measure = "pairwise_dis
 
 #' Clustering dissimilarities
 #'
-#' @param distance_matrix A dissimilarity matrix (required)
+#' @param dissimilarity_matrix A matrix outputted by `convert_to_dissimilarity_matrix()`
+#' @param num_clusters Number of clusters to divide into
 #'
 #' @return an list containing: 1) an hclust object and 2) cluster assignments of samples
 #' @export
-#' @import stats dplyr
+#' @import dplyr
+#' @importFrom stats setNames
 #'
 cluster_distances <- function(dissimilarity_matrix, num_clusters) {
-  hclust_obj <- hclust(dist(dissimilarity_matrix, method = "euclidean"), method = "ward.d2")
+  if (nrow(dissimilarity_matrix) < num_clusters) stop("You have selected more clusters than samples!")
+  hclust_obj <- hclust(dist(dissimilarity_matrix, method = "euclidean"), method = "ward.D2")
   cluster_assignments <- cutree(hclust_obj, k = num_clusters) %>% as.data.frame() %>% setNames("cluster")
-  return(list(hclust_obj, cluster_assignments))
+  cluster_assignments$cluster <- as.factor(cluster_assignments$cluster)
+  return(list(hclust_obj = hclust_obj, cluster_assignments = cluster_assignments))
+}
+
+#' Visualize clusters
+#'
+#' @param dissimilarity_matrix A matrix outputted by `convert_to_dissimilarity_matrix()`
+#' @param cluster_results The result from `cluster_distances()`. If left empty, no clustering results will be visualized.
+#'
+#' @return A ggplot-ready data.frame
+#' @export
+#'
+visualize_clusters <- function(dissimilarity_matrix, cluster_results = NA) {
+  x <- as.dist(dissimilarity_matrix) %>%
+    cmdscale() %>% as.data.frame()
+  if (!is.na(cluster_results)) {
+    x <- x %>%
+      merge(cluster_results, by="row.names", all.x=TRUE)
+  } else {
+    warning("No cluster_results specified!")
+  }
+  return(tbl_df(x))
 }
 
 #' Create in silico merged bulk profiles from single-cell files
@@ -173,21 +201,22 @@ cluster_distances <- function(dissimilarity_matrix, num_clusters) {
 #' @param cpg_all The list containing all CpG calls in data.frame format
 #'
 #' @return a BSmooth object ready for smoothing
-#' @import stats
+#' @import dplyr
+#' @importFrom stats setNames
 #' @export
 #'
 #' @details Uses the bsseq package to perform in silico merging of single-cell CpG calls. Requires the bsseq R package to be installed
 #'
 merge_cpgs <- function(cluster_members, cpg_all) {
   if (!requireNamespace("bsseq", quietly = TRUE)) {
-    stop("'bsseq' package needed for this function to work. Please install it.",
+    stop("'bsseq' package needed for this function to work. Please install it at http://bioconductor.org/packages/release/bioc/html/bsseq.html.",
          call. = FALSE)
   }
   # usage: bssmooth_list <- mclapply(cluster_groupings, merge_cpgs)
   tmp <- cpg_all[get(cluster_members)]
   tmp <- lapply(seq_along(tmp), function(i) {
     x = tmp[[i]]
-    y = BSseq(M = as.matrix(x$V4/100), Cov = as.matrix(rep(1, nrow(x))), chr = x$V1, pos = x$V2, sampleNames = names(tmp)[[i]])
+    y = BSseq(M = as.matrix(x$meth/100), Cov = as.matrix(rep(1, nrow(x))), chr = x$chr, pos = x$start, sampleNames = names(tmp)[[i]])
     return(y)
   })
   tmp2 = tmp[[1]]
@@ -200,3 +229,5 @@ merge_cpgs <- function(cluster_members, cpg_all) {
   }
   return(tmp2)
 }
+
+"cpg_files"
