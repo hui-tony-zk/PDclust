@@ -79,14 +79,12 @@ The second step is to do pairwise calculations. This results in a data.frame wit
 ``` r
 cpg_files_pairwise <- create_pairwise_master(cpg_files)
 cpg_files_pairwise
-#> # A tibble: 3 x 6
-#>                x              y total pear_corr
-#>            <chr>          <chr> <int>     <dbl>
-#> 1 px0494_TACAGCA px0493_ATGTCAA  2423 0.7357841
-#> 2 px0494_TACAGCA px0494_GAATAAA  3665 0.7725778
-#> 3 px0493_ATGTCAA px0494_GAATAAA  3498 0.7486514
-#> # ... with 2 more variables: pairwise_dissimilarity_total <dbl>,
-#> #   pairwise_dissimilarity <dbl>
+#> # A tibble: 3 x 4
+#>                x              y num_cpgs pairwise_dissimilarity
+#>            <chr>          <chr>    <int>                  <dbl>
+#> 1 px0494_TACAGCA px0493_ATGTCAA     2423               11.96863
+#> 2 px0494_TACAGCA px0494_GAATAAA     3665               10.15007
+#> 3 px0493_ATGTCAA px0494_GAATAAA     3498               11.52087
 ```
 
 You can also parallelize this function over many cores in case you have many samples. Keep in mind that there are `nC2` calculations to make, where `n` is the number of single-cells. Thus, for many samples, it might take a long time.
@@ -95,28 +93,24 @@ For reference, 100 single-cells takes about 30 minutes.
 
 ``` r
 create_pairwise_master(cpg_files, cores_to_use = 2)
-#> # A tibble: 3 x 6
-#>                x              y total pear_corr
-#>            <chr>          <chr> <int>     <dbl>
-#> 1 px0494_TACAGCA px0493_ATGTCAA  2423 0.7357841
-#> 2 px0494_TACAGCA px0494_GAATAAA  3665 0.7725778
-#> 3 px0493_ATGTCAA px0494_GAATAAA  3498 0.7486514
-#> # ... with 2 more variables: pairwise_dissimilarity_total <dbl>,
-#> #   pairwise_dissimilarity <dbl>
+#> # A tibble: 3 x 4
+#>                x              y num_cpgs pairwise_dissimilarity
+#>            <chr>          <chr>    <int>                  <dbl>
+#> 1 px0494_TACAGCA px0493_ATGTCAA     2423               11.96863
+#> 2 px0494_TACAGCA px0494_GAATAAA     3665               10.15007
+#> 3 px0493_ATGTCAA px0494_GAATAAA     3498               11.52087
 ```
 
 You can include non-binary methylation calls in your distance calculation in cases where you aren't working with single-cells, or have reason to believe that a CpG site might not be binary (in cases such as copy number variants).
 
 ``` r
 create_pairwise_master(cpg_files, digital = FALSE)
-#> # A tibble: 3 x 6
-#>                x              y total pear_corr
-#>            <chr>          <chr> <int>     <dbl>
-#> 1 px0494_TACAGCA px0493_ATGTCAA  2432 0.7346915
-#> 2 px0494_TACAGCA px0494_GAATAAA  3699 0.7684877
-#> 3 px0493_ATGTCAA px0494_GAATAAA  3538 0.7444724
-#> # ... with 2 more variables: pairwise_dissimilarity_total <dbl>,
-#> #   pairwise_dissimilarity <dbl>
+#> # A tibble: 3 x 4
+#>                x              y num_cpgs pairwise_dissimilarity
+#>            <chr>          <chr>    <int>                  <dbl>
+#> 1 px0494_TACAGCA px0493_ATGTCAA     2432               12.08882
+#> 2 px0494_TACAGCA px0494_GAATAAA     3699               10.50584
+#> 3 px0493_ATGTCAA px0494_GAATAAA     3538               11.93173
 ```
 
 If you want to use your own metric instead of dissimilarity, you can set `calcdiff = FALSE` to generate the list of pairwise joins
@@ -253,4 +247,75 @@ ggplot(viz_df, aes(V1, V2, color = cluster)) +
   geom_point()
 ```
 
-![](README_files/figure-markdown_github/unnamed-chunk-13-1.png)
+![](README_files/figure-markdown_github/unnamed-chunk-13-1.png) \#\# Optional Step 5: *in silico* merge single-cells by cluster
+
+This function requires the `bsseq` package to be installed: <https://github.com/kasperdanielhansen/bsseq>
+
+*(in this example, we merge the two group2 cells)*
+
+``` r
+group2_merge <- merge_cpgs(cpg_files,
+                           cluster_assignments = cluster_results$cluster_assignments,
+                           desired_cluster = 2)
+#> Loading required package: bsseq
+#> Loading required package: BiocGenerics
+#> Loading required package: parallel
+#> 
+#> Attaching package: 'BiocGenerics'
+#> The following objects are masked from 'package:parallel':
+#> 
+#>     clusterApply, clusterApplyLB, clusterCall, clusterEvalQ,
+#>     clusterExport, clusterMap, parApply, parCapply, parLapply,
+#>     parLapplyLB, parRapply, parSapply, parSapplyLB
+#> The following objects are masked from 'package:dplyr':
+#> 
+#>     combine, intersect, setdiff, union
+#> The following objects are masked from 'package:stats':
+#> 
+#>     IQR, mad, xtabs
+#> The following objects are masked from 'package:base':
+#> 
+#>     anyDuplicated, append, as.data.frame, cbind, colnames,
+#>     do.call, duplicated, eval, evalq, Filter, Find, get, grep,
+#>     grepl, intersect, is.unsorted, lapply, lengths, Map, mapply,
+#>     match, mget, order, paste, pmax, pmax.int, pmin, pmin.int,
+#>     Position, rank, rbind, Reduce, rownames, sapply, setdiff,
+#>     sort, table, tapply, union, unique, unsplit, which, which.max,
+#>     which.min
+#> Loading required package: GenomicRanges
+#> Loading required package: stats4
+#> Loading required package: S4Vectors
+#> 
+#> Attaching package: 'S4Vectors'
+#> The following objects are masked from 'package:dplyr':
+#> 
+#>     first, rename
+#> The following objects are masked from 'package:base':
+#> 
+#>     colMeans, colSums, expand.grid, rowMeans, rowSums
+#> Loading required package: IRanges
+#> 
+#> Attaching package: 'IRanges'
+#> The following objects are masked from 'package:dplyr':
+#> 
+#>     collapse, desc, regroup, slice
+#> Loading required package: GenomeInfoDb
+#> Loading required package: SummarizedExperiment
+#> Loading required package: Biobase
+#> Welcome to Bioconductor
+#> 
+#>     Vignettes contain introductory material; view with
+#>     'browseVignettes()'. To cite Bioconductor, see
+#>     'citation("Biobase")', and for packages 'citation("pkgname")'.
+#> Loading required package: limma
+#> 
+#> Attaching package: 'limma'
+#> The following object is masked from 'package:BiocGenerics':
+#> 
+#>     plotMA
+group2_merge
+#> An object of type 'BSseq' with
+#>   79193 methylation loci
+#>   1 samples
+#> has not been smoothed
+```

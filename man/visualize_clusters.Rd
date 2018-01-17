@@ -4,7 +4,7 @@
 \alias{visualize_clusters}
 \title{Visualize clusters}
 \usage{
-visualize_clusters(dissimilarity_matrix, cluster_results = NA)
+visualize_clusters(dissimilarity_matrix, cluster_labels)
 }
 \arguments{
 \item{dissimilarity_matrix}{A matrix outputted by `convert_to_dissimilarity_matrix()`}

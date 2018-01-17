@@ -10,7 +10,7 @@ get_diff_df(df)
 \item{df}{A dataframe containing the pairwise common CpGs. Required.}
 }
 \value{
-A 1-row dataframe containing the pairwise dissimilarity
+A 1-row dataframe containing two samples compared, the total number of pairwise CpGs, and the pairwise dissimilarity
 }
 \description{
 Get Dissimilarity from a pairwise common data frame

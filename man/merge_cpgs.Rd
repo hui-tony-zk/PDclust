@@ -4,12 +4,14 @@
 \alias{merge_cpgs}
 \title{Create in silico merged bulk profiles from single-cell files}
 \usage{
-merge_cpgs(cluster_members, cpg_all)
+merge_cpgs(cpg_all, cluster_assignments, desired_cluster)
 }
 \arguments{
-\item{cluster_members}{A vector of samples to include}
+\item{cpg_all}{The list containing all CpG calls in data.frame format. Required.}
 
-\item{cpg_all}{The list containing all CpG calls in data.frame format}
+\item{cluster_assignments}{The cluster_assignments outputed from cluster_dissimilarity(). Required}
+
+\item{desired_cluster}{The number desired from the input cluster assignments. Required}
 }
 \value{
 a BSmooth object ready for smoothing

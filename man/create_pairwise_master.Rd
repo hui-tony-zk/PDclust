@@ -24,15 +24,8 @@ Create pairwise comparisons between single-cells
 }
 \details{
 Each dataframe containing CpG calls must have the following four columns:
-1. Chromsome column, named "V1"
-2. Start/Position column, named "V2"
-3. Percentage methylation column, named "V4" (between 0-100)
-}
-\examples{
-\dontrun{
-create_pairwise_master(cpg = cpg_list, digital = TRUE, ncores = 30,
-    calcdiff = TRUE)
-}
-
+1. Chromsome column, named "chr"
+2. Start/Position column, named "start"
+3. Percentage or fractional methylation column, named "meth" (between 0-100 or 0-1)
 }
 

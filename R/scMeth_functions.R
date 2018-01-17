@@ -54,15 +54,9 @@ divide_cores <- function(total, ncores = cores_to_use) {
 #'
 #' @details
 #' Each dataframe containing CpG calls must have the following four columns:
-#' 1. Chromsome column, named "V1"
-#' 2. Start/Position column, named "V2"
-#' 3. Percentage methylation column, named "V4" (between 0-100)
-#'
-#' @examples
-#' \dontrun{
-#' create_pairwise_master(cpg = cpg_list, digital = TRUE, ncores = 30,
-#'     calcdiff = TRUE)
-#' }
+#' 1. Chromsome column, named "chr"
+#' 2. Start/Position column, named "start"
+#' 3. Percentage or fractional methylation column, named "meth" (between 0-100 or 0-1)
 #'
 create_pairwise_master <- function(cpg, digital = TRUE, cores_to_use = 2, calcdiff = TRUE){
   doMC::registerDoMC(cores_to_use)
@@ -80,8 +74,8 @@ create_pairwise_master <- function(cpg, digital = TRUE, cores_to_use = 2, calcdi
       one <- cpg[[name1]] %>% select(1,2,4)
       two <- cpg[[name2]] %>% select(1,2,4)
       if (digital) {
-        one <- filter(one, meth == 0 | meth == 100)
-        two <- filter(two, meth == 0 | meth == 100)
+        one <- filter(one, meth == 0 | meth == max(meth))
+        two <- filter(two, meth == 0 | meth == max(meth))
       }
       merge_temp <- inner_join(one, two, by=c("chr", "start")) %>% setNames(c("chr","pos",paste0(name1), paste0(name2)))
       if (calcdiff) {
@@ -104,7 +98,7 @@ create_pairwise_master <- function(cpg, digital = TRUE, cores_to_use = 2, calcdi
 #'
 #' @param df A dataframe containing the pairwise common CpGs. Required.
 #'
-#' @return A 1-row dataframe containing the pairwise dissimilarity
+#' @return A 1-row dataframe containing two samples compared, the total number of pairwise CpGs, and the pairwise dissimilarity
 #' @import dplyr
 #' @importFrom stats setNames
 #'
@@ -127,6 +121,8 @@ get_diff_df <- function(df) {
     pairwise_dissimilarity_total = sum(abs(df[[3]]-df[[4]]))
   ) %>%
     mutate(pairwise_dissimilarity = pairwise_dissimilarity_total/total)
+  diff.temp <- diff.temp %>%
+    select(x, y, num_cpgs = total, pairwise_dissimilarity)
   return(diff.temp)
 }
 
@@ -197,8 +193,9 @@ visualize_clusters <- function(dissimilarity_matrix, cluster_labels) {
 
 #' Create in silico merged bulk profiles from single-cell files
 #'
-#' @param cluster_members A vector of samples to include
-#' @param cpg_all The list containing all CpG calls in data.frame format
+#' @param cpg_all The list containing all CpG calls in data.frame format. Required.
+#' @param cluster_assignments The cluster_assignments outputed from cluster_dissimilarity(). Required
+#' @param desired_cluster The number desired from the input cluster assignments. Required
 #'
 #' @return a BSmooth object ready for smoothing
 #' @import dplyr
@@ -207,13 +204,17 @@ visualize_clusters <- function(dissimilarity_matrix, cluster_labels) {
 #'
 #' @details Uses the bsseq package to perform in silico merging of single-cell CpG calls. Requires the bsseq R package to be installed
 #'
-merge_cpgs <- function(cluster_members, cpg_all) {
-  if (!requireNamespace("bsseq", quietly = TRUE)) {
+merge_cpgs <- function(cpg_all, cluster_assignments, desired_cluster) {
+  if (!require("bsseq")) {
     stop("'bsseq' package needed for this function to work. Please install it at http://bioconductor.org/packages/release/bioc/html/bsseq.html.",
          call. = FALSE)
   }
-  # usage: bssmooth_list <- mclapply(cluster_groupings, merge_cpgs)
-  tmp <- cpg_all[get(cluster_members)]
+  # get group members
+  cluster_members <- cluster_assignments %>%
+    subset(cluster == desired_cluster) %>%
+    row.names()
+  # get group CpGs
+  tmp <- cpg_all[cluster_members]
   tmp <- lapply(seq_along(tmp), function(i) {
     x = tmp[[i]]
     y = BSseq(M = as.matrix(x$meth/100), Cov = as.matrix(rep(1, nrow(x))), chr = x$chr, pos = x$start, sampleNames = names(tmp)[[i]])
@@ -221,10 +222,9 @@ merge_cpgs <- function(cluster_members, cpg_all) {
   })
   tmp2 = tmp[[1]]
   for (i in 2:length(tmp)) {
-    cat(paste(i, "\r"))
     tmp2 = combineList(list(tmp2, tmp[[i]]))
     samples = sampleNames(tmp2)
-    tmp2 = collapseBSseq(tmp2, columns = rep(cluster_members, length(samples)) %>% setNames(samples))
+    tmp2 = collapseBSseq(tmp2, columns = rep(paste0("group", desired_cluster), length(samples)) %>% setNames(samples))
     gc()
   }
   return(tmp2)
