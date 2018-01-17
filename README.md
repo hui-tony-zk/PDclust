@@ -238,9 +238,7 @@ B) Visualize the cluster separation:
 This function projects the dissimilarities into 2D space (using `cmdscale`), and appends clustering results (if included) for easy coloring in `ggplot` later
 
 ``` r
-viz_df <- visualize_clusters(cpg_files_pairwise_matrix, cluster_results = cluster_results$cluster_assignments)
-#> Warning in if (!is.na(cluster_results)) {: the condition has length > 1 and
-#> only the first element will be used
+viz_df <- visualize_clusters(cpg_files_pairwise_matrix, cluster_labels = cluster_results$cluster_assignments)
 viz_df
 #> # A tibble: 3 x 4
 #>        Row.names        V1        V2 cluster

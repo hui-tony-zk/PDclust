@@ -183,14 +183,14 @@ cluster_dissimilarity <- function(dissimilarity_matrix, num_clusters) {
 #' @return A ggplot-ready data.frame
 #' @export
 #'
-visualize_clusters <- function(dissimilarity_matrix, cluster_results = NA) {
+visualize_clusters <- function(dissimilarity_matrix, cluster_labels) {
   x <- as.dist(dissimilarity_matrix) %>%
     cmdscale() %>% as.data.frame()
-  if (!is.na(cluster_results)) {
+  if (!missing(cluster_labels)) {
     x <- x %>%
-      merge(cluster_results, by="row.names", all.x=TRUE)
+      merge(cluster_labels, by="row.names", all.x=TRUE)
   } else {
-    warning("No cluster_results specified!")
+    warning("Warning: no cluster_labels specified!")
   }
   return(tbl_df(x))
 }
