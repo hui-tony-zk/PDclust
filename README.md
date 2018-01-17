@@ -7,7 +7,7 @@ Step 0: Install
 
 Easily install this package with `devtools`:
 
-    devtools::install_github("hui-tony-zk/PDclust")
+    devtools::install_github("hui-tony-zk/PDclust") 
 
 Warning: this package requires the `tidyverse` suite of packages to work. I recommend you `install.packages(tidyverse)` first. If you're unfamiliar with the `tidyverse` suite, I highly recommend you learn more about it.
 
