@@ -1,17 +1,15 @@
-    ## 
-    ## Attaching package: 'dplyr'
-
-    ## The following objects are masked from 'package:stats':
-    ## 
-    ##     filter, lag
-
-    ## The following objects are masked from 'package:base':
-    ## 
-    ##     intersect, setdiff, setequal, union
-
-This package is based off the original PDclust publication <insert citation here>.
+This package is based off the original PDclust publication &lt;insert citation here&gt;.
 
 The workflow for doing PDclust is as follows:
+
+Step 0: Install
+---------------
+
+Easily install this package with `devtools`:
+
+    devtools::install_github("hui-tony-zk/PDclust")
+
+Warning: this package requires the `tidyverse` suite of packages to work. I recommend you `install.packages(tidyverse)` first. If you're unfamiliar with the `tidyverse` suite, I highly recommend you learn more about it.
 
 Step 1: Read in files
 ---------------------
@@ -189,10 +187,10 @@ Step 4: Clustering
 
 ### A) Generating clusters with PDclust
 
-This step clusters the single-cells together with `cluster_distances()`
+This step clusters the single-cells together with `cluster_dissimilarity()`
 
 ``` r
-cluster_results <- cluster_distances(cpg_files_pairwise_matrix, num_clusters = 2)
+cluster_results <- cluster_dissimilarity(cpg_files_pairwise_matrix, num_clusters = 2)
 ```
 
 You can plot the resulting cluster results:
@@ -212,6 +210,23 @@ cluster_results$cluster_assignments
 #> px0494_GAATAAA       2
 #> px0494_TACAGCA       2
 ```
+
+... or use a fancy heatmap
+
+``` r
+heatmap_pallete <- colorRampPalette(RColorBrewer::brewer.pal(8, name = "YlOrRd"))(21)
+
+pheatmap(cpg_files_pairwise_matrix,
+         cluster_rows = cluster_results$hclust_obj,
+         cluster_cols = cluster_results$hclust_obj,
+         treeheight_row = 0,
+         border_color = NA,
+         color = heatmap_pallete,
+         show_colnames = F,
+         annotation_col = cluster_results$cluster_assignments)
+```
+
+![](README_files/figure-markdown_github/unnamed-chunk-11-1.png)
 
 B) Visualize the cluster separation:
 ------------------------------------
@@ -236,4 +251,4 @@ ggplot(viz_df, aes(V1, V2, color = cluster)) +
   geom_point()
 ```
 
-![](README_files/figure-markdown_github/unnamed-chunk-12-1.png)
+![](README_files/figure-markdown_github/unnamed-chunk-13-1.png)

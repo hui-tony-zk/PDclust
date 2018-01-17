@@ -167,7 +167,7 @@ convert_to_dissimilarity_matrix <- function(master_diff, measure = "pairwise_dis
 #' @import dplyr
 #' @importFrom stats setNames
 #'
-cluster_distances <- function(dissimilarity_matrix, num_clusters) {
+cluster_dissimilarity <- function(dissimilarity_matrix, num_clusters) {
   if (nrow(dissimilarity_matrix) < num_clusters) stop("You have selected more clusters than samples!")
   hclust_obj <- hclust(dist(dissimilarity_matrix, method = "euclidean"), method = "ward.D2")
   cluster_assignments <- cutree(hclust_obj, k = num_clusters) %>% as.data.frame() %>% setNames("cluster")
@@ -178,7 +178,7 @@ cluster_distances <- function(dissimilarity_matrix, num_clusters) {
 #' Visualize clusters
 #'
 #' @param dissimilarity_matrix A matrix outputted by `convert_to_dissimilarity_matrix()`
-#' @param cluster_results The result from `cluster_distances()`. If left empty, no clustering results will be visualized.
+#' @param cluster_results The result from `cluster_dissimilarity()`. If left empty, no clustering results will be visualized.
 #'
 #' @return A ggplot-ready data.frame
 #' @export
