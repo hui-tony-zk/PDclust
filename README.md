@@ -247,7 +247,9 @@ ggplot(viz_df, aes(V1, V2, color = cluster)) +
   geom_point()
 ```
 
-![](README_files/figure-markdown_github/unnamed-chunk-13-1.png) \#\# Optional Step 5: *in silico* merge single-cells by cluster
+![](README_files/figure-markdown_github/unnamed-chunk-13-1.png) 
+
+## Optional Step 5: *in silico* merge single-cells by cluster
 
 This function requires the `bsseq` package to be installed: <https://github.com/kasperdanielhansen/bsseq>
 
