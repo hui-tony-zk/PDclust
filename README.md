@@ -1,4 +1,4 @@
-This package is based off the original PDclust publication &lt;insert citation here&gt;.
+This package is based off the original PDclust publication: https://www.cell.com/stem-cell-reports/fulltext/S2213-6711(18)30308-4
 
 The workflow for doing PDclust is as follows:
 
